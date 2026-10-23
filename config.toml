@@ -1,0 +1,14 @@
+# Dark theme matching style/style.css (its colour variables assume a dark background).
+[theme]
+base = "dark"
+primaryColor = "#00B4DB"
+backgroundColor = "#171717"
+secondaryBackgroundColor = "#2D2D2D"
+textColor = "#E0E0E0"
+
+[server]
+# Resume uploads are capped at 5 MB (matches matching/resume_io.py).
+maxUploadSize = 5
+
+[browser]
+gatherUsageStats = false
