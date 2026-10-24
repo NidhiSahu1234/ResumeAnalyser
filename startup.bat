@@ -1,7 +1,7 @@
 @echo off
-REM Startup script for Smart AI Resume Analyzer (Windows version)
+REM Startup script for CareerFit AI (Windows version)
 
-echo Starting Smart AI Resume Analyzer...
+echo Starting CareerFit AI...
 
 REM Check if Chrome is installed silently
 where chrome >nul 2>nul

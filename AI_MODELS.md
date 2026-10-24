@@ -1,52 +1,17 @@
-# AI Models in Smart Resume Analyzer
+# Optional AI analysis
 
-Smart Resume Analyzer uses advanced AI models to provide detailed analysis and feedback on your resume. This document explains the AI models integrated into the application and how they work.
+CareerFit AI has one implemented external AI provider: Google Gemini, accessed through the `google-generativeai` package. AI analysis is optional. Resume-versus-job matching uses deterministic local rules and does not need a provider key.
 
-## Available AI Models
+## Configuration
 
-### 1. Google Gemini
+For local development, copy `utils/.env.example` to `.env` and set `GOOGLE_API_KEY`. For Streamlit hosting, put the key in the application's secret manager. The app reads the key from the process environment first and then from Streamlit secrets. Do not commit a real key or include it in logs.
 
-Google Gemini is a powerful AI model developed by Google that offers state-of-the-art natural language processing capabilities. In Smart Resume Analyzer, Gemini is used to:
+If the key is missing or the provider is unavailable, AI analysis should report the configuration or request failure; it must not substitute a fabricated analysis. The job-match page remains available.
 
-- Analyze resume content and structure
-- Identify key skills and missing skills for target roles
-- Provide personalized recommendations for improvement
-- Score resumes based on quality and relevance
+## Data sent to Google
 
-## How AI Analysis Works
+When a user explicitly agrees and runs AI analysis, the extracted resume text and an optional job description are sent to Google Gemini. Review the provider's current terms and data practices before enabling the feature for real candidate data.
 
-When you upload your resume for AI analysis, the following process occurs:
+## Upstream attribution
 
-1. **Text Extraction**: The system extracts text from your PDF or DOCX resume
-2. **AI Processing**: The selected AI model (Gemini or Claude) analyzes the resume text
-3. **Structured Analysis**: The AI generates a structured analysis including:
-   - Overall assessment
-   - Skills analysis (current and missing skills)
-   - Strengths
-   - Areas for improvement
-   - Recommended courses
-   - Resume score (0-100)
-
-## Configuring AI Models
-
-To use these AI models, you need to set up API keys in your `.env` file:
-
-```
-# API Keys for AI Models
-GOOGLE_API_KEY=your_google_api_key_here
-```
-
-- For Google Gemini, you need a Google API key from [Google AI Studio](https://makersuite.google.com/)
-
-## Privacy and Data Handling
-
-When using the AI analysis features:
-
-- Resume data is sent to the respective AI model providers (Google or Anthropic via OpenRouter)
-- Analysis results are stored in the local database for reference
-- No personal data is shared with third parties beyond what's necessary for analysis
-- You can delete your data at any time through the application
-
-## Future AI Integrations
-
-We plan to integrate additional AI models in the future to provide even more comprehensive resume analysis and feedback. Stay tuned for updates! 
+This project is derived from Smart AI Resume Analyzer by Het Patel. The original license and attribution are retained in [LICENSE](LICENSE).

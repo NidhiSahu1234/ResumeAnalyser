@@ -10,6 +10,7 @@ import streamlit as st
 
 from ui_components import page_header
 from .bullet_coach import analyze_bullets
+from .history import append_history, build_history_entry, history_as_csv
 from .job_match import ESTIMATE_DISCLAIMER, analyze_match
 from .report import build_markdown_report
 from .resume_io import ResumeFileError, extract_resume_text
@@ -59,6 +60,7 @@ _DEFAULTS = {"jm_resume_text": "", "jm_job_text": "", "jm_job_title": "", "jm_re
 def _init_state() -> None:
     for key, value in _DEFAULTS.items():
         st.session_state.setdefault(key, value)
+    st.session_state.setdefault("jm_history", [])
 
 
 def _load_sample() -> None:
@@ -91,6 +93,9 @@ def _run_analysis(upload) -> None:
     result = analyze_match(resume_text, st.session_state.jm_job_text)
     st.session_state.jm_result = result
     st.session_state.jm_bullets = analyze_bullets(resume_text) if result["status"] == "ok" else None
+    if result["status"] == "ok":
+        entry = build_history_entry(result, st.session_state.jm_job_title, resume_text)
+        st.session_state.jm_history = append_history(st.session_state.jm_history, entry)
 
 
 def _render_inputs():
@@ -233,6 +238,76 @@ def _render_results() -> None:
                        file_name="job_match_report.md", mime="text/markdown")
 
 
+def _render_history() -> None:
+    history = st.session_state.get("jm_history", [])
+    st.divider()
+    st.subheader("Match history")
+    st.caption("Your last 20 successful comparisons stay in this app session only. Resume and job text are not saved here.")
+    st.caption(ESTIMATE_DISCLAIMER)
+    if not history:
+        st.info("Your completed comparisons will appear here.")
+        return
+
+    export_col, clear_col, _ = st.columns([1.5, 1, 4])
+    export_col.download_button(
+        "Download history (CSV)", history_as_csv(history),
+        file_name="careerfit_match_history.csv", mime="text/csv",
+        help="Exports role names, scores, and skill gaps. It does not include resume text.",
+    )
+    if clear_col.button("Clear history", key="jm_clear_history"):
+        st.session_state.jm_history = []
+        st.rerun()
+
+    labels = {
+        entry["id"]: f'{entry["created_at"][:16].replace("T", " ")} · '
+                      f'{entry["job_title"]} · {entry["overall_score"]}/100'
+        for entry in history
+    }
+    by_id = {entry["id"]: entry for entry in history}
+    if len(history) >= 2:
+        first_col, second_col = st.columns(2)
+        first_id = first_col.selectbox("First comparison", list(labels), format_func=labels.get,
+                                       key="jm_compare_first")
+        second_options = [entry_id for entry_id in labels if entry_id != first_id]
+        second_id = second_col.selectbox("Second comparison", second_options,
+                                         format_func=labels.get,
+                                         key=f"jm_compare_second_{first_id}")
+        first, second = by_id[first_id], by_id[second_id]
+        same_resume = first["resume_fingerprint"] == second["resume_fingerprint"]
+        delta = int(second["overall_score"]) - int(first["overall_score"]) if same_resume else None
+        score_cols = st.columns(2)
+        score_cols[0].metric("First estimate", f'{first["overall_score"]}/100',
+                             delta=f"{ -delta:+d} pts" if delta is not None else None,
+                             delta_color="off")
+        score_cols[1].metric("Second estimate", f'{second["overall_score"]}/100',
+                             delta=f"{delta:+d} pts" if delta is not None else None,
+                             delta_color="off")
+        if same_resume:
+            st.caption("The same normalized resume text was used, so the point difference compares these job postings.")
+        else:
+            st.caption("The resume text changed between these runs. Compare the estimates side by side; the difference also reflects the resume change.")
+        st.markdown("**Missing skills**")
+        gap_cols = st.columns(2)
+        for col, entry, key in ((gap_cols[0], first, "missing_required"),
+                                (gap_cols[1], second, "missing_required")):
+            col.markdown(f'**{entry["job_title"]} · required**')
+            col.write(", ".join(entry[key]) or "No required skill gaps found")
+        for col, entry in ((gap_cols[0], first), (gap_cols[1], second)):
+            col.markdown(f'**{entry["job_title"]} · preferred**')
+            col.write(", ".join(entry["missing_preferred"]) or "No preferred skill gaps found")
+
+    with st.expander(f"All saved comparisons ({len(history)})", expanded=len(history) < 2):
+        st.dataframe(
+            [{"Analyzed": entry["created_at"][:16].replace("T", " "),
+              "Job": entry["job_title"], "Estimate": f'{entry["overall_score"]}/100',
+              "Required matched": f'{entry["required_matched"]}/{entry["required_total"]}',
+              "Missing required": ", ".join(entry["missing_required"]) or "None",
+              "Missing preferred": ", ".join(entry["missing_preferred"]) or "None"}
+             for entry in history],
+            hide_index=True, use_container_width=True,
+        )
+
+
 def render_job_match() -> None:
     """Entry point used by app.py."""
     _init_state()
@@ -240,3 +315,4 @@ def render_job_match() -> None:
     _render_inputs()
     st.divider()
     _render_results()
+    _render_history()

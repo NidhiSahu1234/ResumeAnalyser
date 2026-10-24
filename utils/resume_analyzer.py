@@ -605,16 +605,14 @@ class ResumeAnalyzer:
                 }
             }
         except Exception as e:
-            import traceback
-            print(f"Error analyzing resume: {str(e)}")
-            print(traceback.format_exc())
+            print("Resume analysis failed; resume contents were not logged.")
             # Return a default error response
             return {
-                'error': f"Resume analysis failed: {str(e)}",
+                'error': "Resume analysis failed. Check the file format and try again.",
                 'ats_score': 0,
                 'document_type': 'unknown',
                 'keyword_match': {'score': 0, 'found_skills': [], 'missing_skills': []},
                 'section_score': 0,
                 'format_score': 0,
-                'suggestions': [f"Error analyzing resume: {str(e)}. Please check your file and try again."]
+                'suggestions': ["Please check the file format and try again."]
             }

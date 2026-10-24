@@ -1,233 +1,39 @@
-# Deployment Guide for Smart AI Resume Analyzer
+# Deployment guide
 
-This guide provides instructions for deploying the Smart AI Resume Analyzer application in various environments, with a focus on resolving Chrome webdriver issues.
+CareerFit AI is a Streamlit application. Streamlit Community Cloud is the simplest host to evaluate first; no hosting project has been created and there is no verified public URL yet.
 
-## Local Deployment
+## Before deployment
 
-### Prerequisites
-- Python 3.7 or higher
-- Chrome browser installed
-- pip for installing dependencies
+1. Review the repository's existing database and spreadsheet files and Git history. The target repository has previously contained these data artifacts; `.gitignore` cannot remove tracked files or erase old versions.
+2. Do not deploy with real resume data in a public or shared SQLite database. The legacy analyzer and builder can save resume details only after a user opts in, but SQLite files are not encrypted and the app has no end-user accounts.
+3. Decide whether to disable database-backed features or replace local SQLite with private, access-controlled storage before inviting real users. Do not use paid services without approval.
+4. Add `GOOGLE_API_KEY` only if you intend to enable Gemini analysis. The job-match feature works without it. Store the key in the host's secret manager, never in source control.
+5. Review all dependencies and the required Chromium system packages in `packages.txt` for the selected host.
 
-### Steps for Windows
-1. Clone the repository
-2. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-3. Run the application using the Python script:
-   ```
-   python run_app.py
-   ```
-   
-   This script will automatically set up chromedriver and start the application.
+## Streamlit Community Cloud
 
-   Alternatively, you can run the batch file:
-   ```
-   startup.bat
+1. Sign in to Streamlit Community Cloud and connect the intended GitHub repository.
+2. Select the repository's deployment branch and set the application entry point to `app.py`.
+3. Add Python dependencies from `requirements.txt`. If using job-search browser automation, also confirm the host supports the Chromium packages listed in `packages.txt`.
+4. If Gemini analysis is enabled, add `GOOGLE_API_KEY` in the app's Secrets settings as a TOML string, for example:
+
+   ```toml
+   GOOGLE_API_KEY = "your_key_here"
    ```
 
-### Steps for Linux/Mac
-1. Clone the repository
-2. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-3. Run the setup script to install the correct chromedriver:
-   ```
-   python setup_chromedriver.py
-   ```
-4. Run the application:
-   ```
-   streamlit run app.py
-   ```
+5. Deploy and inspect the application logs without sharing resume text or secret values.
+6. Verify the landing page, PDF/DOCX upload, job comparison, skill gaps, bullet feedback, report download, and missing-key behavior with a fictional sample resume.
+7. Add the actual public URL to `README.md` only after those checks pass.
 
-   Alternatively, you can use the startup script which handles both chromedriver setup and application startup:
-   ```
-   chmod +x startup.sh
-   ./startup.sh
-   ```
+The job-match history exists only for a visitor's current app session. Files written to a hosted instance's local filesystem may be lost when the instance restarts or redeploys; do not treat local SQLite as durable storage.
 
-## Server Deployment (Linux)
+Official setup references: [deploy an app](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/deploy), [configure secrets](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/secrets-management), and [declare dependencies](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/app-dependencies).
 
-### Installing Chrome on Ubuntu/Debian
-```bash
-# Update package list
-sudo apt update
+## Local run
 
-# Install Chrome dependencies
-sudo apt install -y wget unzip fontconfig fonts-liberation libasound2 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 libcairo2 libcups2 libdrm2 libgbm1 libgtk-3-0 libnspr4 libnss3 libpango-1.0-0 libxcomposite1 libxdamage1 libxfixes3 libxkbcommon0 libxrandr2 xdg-utils
-
-# Download and install Chrome
-wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-sudo apt install -y ./google-chrome-stable_current_amd64.deb
-rm google-chrome-stable_current_amd64.deb
-
-# Verify installation
-google-chrome --version
+```powershell
+python -m pip install -r requirements.txt
+streamlit run app.py
 ```
 
-### Installing Chrome on CentOS/RHEL
-```bash
-# Add Chrome repository
-sudo tee /etc/yum.repos.d/google-chrome.repo <<EOF
-[google-chrome]
-name=google-chrome
-baseurl=http://dl.google.com/linux/chrome/rpm/stable/x86_64
-enabled=1
-gpgcheck=1
-gpgkey=https://dl.google.com/linux/linux_signing_key.pub
-EOF
-
-# Install Chrome
-sudo yum install -y google-chrome-stable
-
-# Verify installation
-google-chrome --version
-```
-
-### Running the Application on Server
-After installing Chrome, deploy the application:
-
-1. Clone the repository
-2. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-3. Make the startup script executable and run it:
-   ```
-   chmod +x startup.sh
-   ./startup.sh
-   ```
-
-## Windows Server Deployment
-
-### Prerequisites
-- Python 3.7 or higher
-- Chrome browser installed
-- pip for installing dependencies
-
-### Steps
-1. Clone the repository
-2. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-3. Run the application using the Python script:
-   ```
-   python run_app.py
-   ```
-   
-   This script will automatically set up chromedriver and start the application.
-
-## Streamlit Cloud Deployment
-
-When deploying to Streamlit Cloud, you need to ensure Chrome is available. Our application includes multiple fallback mechanisms to handle this.
-
-### Steps for Streamlit Cloud
-1. Push your code to a GitHub repository
-2. Create a new app in Streamlit Cloud pointing to your repository
-3. Make sure your `requirements.txt` includes all necessary dependencies:
-   - `selenium>=4.10.0`
-   - `webdriver-manager>=4.0.0`
-   - `chromedriver-autoinstaller>=0.6.2`
-4. Ensure the `packages.txt` file is in your repository with:
-   ```
-   chromium
-   chromium-driver
-   libglib2.0-0
-   libnss3
-   libgconf-2-4
-   libfontconfig1
-   xvfb
-   wget
-   unzip
-   ```
-
-### Troubleshooting Streamlit Cloud
-If you encounter issues with Chrome on Streamlit Cloud:
-
-1. Check the logs for specific error messages
-2. Try adding a custom command to run the setup script before the app starts:
-   - In the Streamlit Cloud settings, add a "Main file path" of `run_app.py` instead of `app.py`
-
-## Docker Deployment
-
-For Docker deployment, you need to include Chrome in your Docker image.
-
-### Sample Dockerfile
-```dockerfile
-FROM python:3.9-slim
-
-# Install Chrome
-RUN apt-get update && apt-get install -y \
-    wget \
-    gnupg \
-    unzip \
-    xvfb \
-    libglib2.0-0 \
-    libnss3 \
-    libgconf-2-4 \
-    libfontconfig1 \
-    && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
-    && apt-get update \
-    && apt-get install -y google-chrome-stable \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Set up working directory
-WORKDIR /app
-
-# Copy requirements and install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy application code
-COPY . .
-
-# Make scripts executable
-RUN chmod +x startup.sh setup_chromedriver.py
-
-# Expose port for Streamlit
-EXPOSE 8501
-
-# Run the startup script
-CMD ["python", "run_app.py"]
-```
-
-## Troubleshooting Common Issues
-
-### Error: "Service unexpectedly exited"
-This usually indicates that Chrome cannot be started. Ensure:
-- Chrome is installed
-- You have the correct permissions
-- You're using the `--no-sandbox` option in headless environments
-
-### Error: "Chrome version must be between X and Y"
-This indicates a version mismatch between Chrome and chromedriver:
-- Run the `setup_chromedriver.py` script to install the matching chromedriver version
-- The script automatically detects your Chrome version and downloads the compatible chromedriver
-
-### Error: "Permission denied" when installing chromedriver
-This is a permission issue:
-- Try running the application with administrator privileges
-- Ensure the user has write permissions to the installation directory
-- Use the `setup_chromedriver.py` script which installs chromedriver in the user's home directory
-
-### Error: "unknown error: DevToolsActivePort file doesn't exist"
-This is common in containerized environments:
-- Add `--disable-dev-shm-usage` to Chrome options (already included in our setup)
-- Ensure you're using `--no-sandbox` in Docker/container environments
-
-### Windows-specific issues
-If you encounter issues on Windows:
-- Make sure Chrome is installed in the standard location
-- Try running the application as administrator
-- Use the `run_app.py` script which handles setup automatically
-- Check Windows Defender or antivirus software that might be blocking chromedriver
-
-## Additional Resources
-- [Selenium Documentation](https://www.selenium.dev/documentation/)
-- [Chrome for Testing](https://developer.chrome.com/docs/chromium/chrome-for-testing)
-- [Streamlit Deployment](https://docs.streamlit.io/streamlit-cloud/get-started/deploy-an-app) 
+For Gemini locally, copy `utils/.env.example` to `.env` and set the key there. The `.env` file is ignored by Git.

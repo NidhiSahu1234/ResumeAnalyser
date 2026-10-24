@@ -1,8 +1,8 @@
 #!/bin/bash
-# Startup script for Smart AI Resume Analyzer
+# Startup script for CareerFit AI
 # This script installs the correct chromedriver before starting the application
 
-echo "Starting Smart AI Resume Analyzer setup..."
+echo "Starting CareerFit AI setup..."
 
 # Check if Chrome/Chromium is installed
 if command -v google-chrome &> /dev/null; then

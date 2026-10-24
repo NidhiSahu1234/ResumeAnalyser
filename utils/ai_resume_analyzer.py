@@ -17,14 +17,26 @@ import math
 import re
 
 
+def _configured_secret(name):
+    """Read a provider key from the environment or Streamlit's secret store."""
+    value = os.getenv(name)
+    if value:
+        return value.strip() or None
+    try:
+        value = st.secrets.get(name)
+        return str(value).strip() if value else None
+    except Exception:
+        # Streamlit secrets are optional during local development and tests.
+        return None
+
+
 class AIResumeAnalyzer:
     def __init__(self):
         # Load environment variables
         load_dotenv()
         
         # Configure Google Gemini AI
-        self.google_api_key = os.getenv("GOOGLE_API_KEY")
-        self.openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
+        self.google_api_key = _configured_secret("GOOGLE_API_KEY")
         
         if self.google_api_key:
             genai.configure(api_key=self.google_api_key)
@@ -192,7 +204,7 @@ class AIResumeAnalyzer:
             return {"error": "Resume text is required for analysis."}
         
         if not self.google_api_key:
-            return {"error": "Google API key is not configured. Please add it to your .env file."}
+            return {"error": "Google Gemini is not configured. Set GOOGLE_API_KEY in your local .env or Streamlit secrets."}
         
         try:
             model = genai.GenerativeModel("gemini-2.5-flash")
@@ -277,8 +289,8 @@ class AIResumeAnalyzer:
                 "ats_score": ats_score
             }
         
-        except Exception as e:
-            return {"error": f"Analysis failed: {str(e)}"}
+        except Exception:
+            return {"error": "Google Gemini could not complete the request. Check the key, provider availability, and connection."}
 
     
     def generate_pdf_report(self, analysis_result, candidate_name, job_role):
@@ -1099,9 +1111,7 @@ class AIResumeAnalyzer:
             return buffer
         
         except Exception as e:
-            st.error(f"Error generating simple PDF report: {str(e)}")
-            import traceback
-            st.code(traceback.format_exc())
+            st.error("The PDF report could not be generated. Try again or use the Markdown report.")
             return None
             
     def extract_skills_from_analysis(self, analysis_text):
@@ -1200,13 +1210,11 @@ class AIResumeAnalyzer:
         - resume_text: The text content of the resume
         - job_role: The target job role
         - role_info: Additional information about the job role
-        - model: The AI model to use ("Google Gemini" or "Anthropic Claude")
+        - model: The configured AI model (Google Gemini)
         
         Returns:
         - Dictionary containing analysis results
         """
-        import traceback
-        
         try:
             job_description = None
             if role_info:
@@ -1220,14 +1228,22 @@ class AIResumeAnalyzer:
             if model == "Google Gemini":
                 result = self.analyze_resume_with_gemini(resume_text, job_description, job_role)
                 model_used = "Google Gemini"
-            elif model == "Anthropic Claude":
-                result = self.analyze_resume_with_anthropic(resume_text, job_description, job_role)
-                # Get the actual model used from the result
-                model_used = result.get("model_used", "Anthropic Claude")
             else:
                 # Default to Gemini if model not recognized
                 result = self.analyze_resume_with_gemini(resume_text, job_description, job_role)
                 model_used = "Google Gemini"
+
+            if result.get("error"):
+                return {
+                    "error": result["error"],
+                    "score": None,
+                    "ats_score": None,
+                    "strengths": [],
+                    "weaknesses": [],
+                    "suggestions": [],
+                    "full_response": "",
+                    "model_used": model_used,
+                }
             
             # Process the result to extract structured information
             analysis_text = result.get("analysis", "")
@@ -1276,16 +1292,14 @@ class AIResumeAnalyzer:
             }
             
         except Exception as e:
-            print(f"Error in analyze_resume: {str(e)}")
-            print(traceback.format_exc())
             return {
-                "error": f"Analysis failed: {str(e)}",
+                "error": "Analysis failed. Check the document and Gemini configuration, then try again.",
                 "score": 0,
                 "ats_score": 0,
                 "strengths": ["Unable to analyze resume due to an error."],
                 "weaknesses": ["Unable to analyze resume due to an error."],
                 "suggestions": ["Try again with a different model or check your resume format."],
-                "full_response": f"Error: {str(e)}",
+                "full_response": "Analysis could not be completed.",
                 "model_used": "Error"
             } 
 
@@ -1810,9 +1824,7 @@ class AIResumeAnalyzer:
             return buffer
         
         except Exception as e:
-            st.error(f"Error generating simple PDF report: {str(e)}")
-            import traceback
-            st.code(traceback.format_exc())
+            st.error("The PDF report could not be generated. Try again or use the Markdown report.")
             return None 
 
     def process_sections(self, analysis_text, content, normal_style, list_item_style, subheading_style, heading_style, clean_markdown):

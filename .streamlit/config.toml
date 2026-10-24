@@ -1,4 +1,7 @@
-# Dark theme matching style/style.css (its colour variables assume a dark background).
+# CareerFit AI
+
+# CareerFit AI uses Streamlit's dark theme by default; page styles load from style/style.css.
+
 [theme]
 base = "dark"
 primaryColor = "#00B4DB"
@@ -7,7 +10,7 @@ secondaryBackgroundColor = "#2D2D2D"
 textColor = "#E0E0E0"
 
 [server]
-# Resume uploads are capped at 5 MB (matches matching/resume_io.py).
+# The job-match uploader and server setting share the 5 MB cap.
 maxUploadSize = 5
 
 [browser]

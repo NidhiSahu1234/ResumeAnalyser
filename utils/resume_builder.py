@@ -7,7 +7,6 @@ from docx.oxml import parse_xml
 from docx.oxml.ns import nsdecls
 from io import BytesIO
 import tempfile
-import traceback
 
 class ResumeBuilder:
     def __init__(self):
@@ -51,9 +50,8 @@ class ResumeBuilder:
             return buffer
             
         except Exception as e:
-            print(f"Error in generate_resume: {str(e)}")
-            print(f"Full traceback: {traceback.format_exc()}")
-            print(f"Template data: {data}")
+            # Resume data contains contact details; do not write it or its traceback to logs.
+            print("Resume generation failed; candidate data was not logged.")
             raise
 
     def _format_list_items(self, items):

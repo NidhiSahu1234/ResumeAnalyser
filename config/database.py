@@ -1,5 +1,6 @@
 import sqlite3
 from datetime import datetime
+from config.admin_auth import hash_password, verify_password
 
 def get_database_connection():
     """Create and return a database connection"""
@@ -262,9 +263,16 @@ def verify_admin(email, password):
     cursor = conn.cursor()
     
     try:
-        cursor.execute('SELECT * FROM admin WHERE email = ? AND password = ?', (email, password))
+        cursor.execute('SELECT id, password FROM admin WHERE email = ?', (email,))
         result = cursor.fetchone()
-        return bool(result)
+        if not result:
+            return False
+        valid, needs_rehash = verify_password(password, result[1])
+        if valid and needs_rehash:
+            cursor.execute('UPDATE admin SET password = ? WHERE id = ?',
+                           (hash_password(password), result[0]))
+            conn.commit()
+        return valid
     except Exception as e:
         print(f"Error verifying admin: {str(e)}")
         return False
@@ -273,11 +281,14 @@ def verify_admin(email, password):
 
 def add_admin(email, password):
     """Add a new admin"""
+    if not email or not password:
+        return False
     conn = get_database_connection()
     cursor = conn.cursor()
     
     try:
-        cursor.execute('INSERT INTO admin (email, password) VALUES (?, ?)', (email, password))
+        cursor.execute('INSERT INTO admin (email, password) VALUES (?, ?)',
+                       (email, hash_password(password)))
         conn.commit()
         return True
     except Exception as e:

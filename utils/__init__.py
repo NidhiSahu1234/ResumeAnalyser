@@ -1,5 +1,5 @@
 """
-Utils package for Smart Resume AI
+Utilities package for CareerFit AI
 """
 
 from .resume_analyzer import ResumeAnalyzer

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Run script for Smart AI Resume Analyzer
+Run script for CareerFit AI
 This script handles Chrome/chromedriver setup and starts the application
 """
 
@@ -11,10 +11,12 @@ import platform
 
 def main():
     """Main function to set up chromedriver and run the application"""
-    print("Starting Smart AI Resume Analyzer...")
+    project_dir = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(project_dir)
+    print("Starting CareerFit AI...")
     
     # Run the chromedriver setup script silently
-    setup_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "setup_chromedriver.py")
+    setup_script = os.path.join(project_dir, "setup_chromedriver.py")
     
     if os.path.exists(setup_script):
         try:
@@ -31,7 +33,7 @@ def main():
     
     # Start the Streamlit application
     print("Starting application...")
-    app_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app.py")
+    app_script = os.path.join(project_dir, "app.py")
     
     if os.path.exists(app_script):
         try:

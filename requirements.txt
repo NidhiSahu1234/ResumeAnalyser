@@ -26,7 +26,6 @@ pdf2image
 pytesseract
 pdfplumber
 reportlab
-openrouter
 docx2pdf
 docx2txt
 python-pptx

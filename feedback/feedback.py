@@ -254,7 +254,7 @@ class FeedbackManager:
                 success_container.markdown("""
                     <div style="text-align: center; padding: 20px; background: linear-gradient(90deg, rgba(76, 175, 80, 0.1), rgba(33, 150, 243, 0.1)); border-radius: 10px;">
                         <h2 style="color: #4CAF50;">Thank You! 🎉</h2>
-                        <p style="color: #E0E0E0;">Your feedback helps us improve Smart Resume AI</p>
+                        <p style="color: #E0E0E0;">Your feedback helps us improve CareerFit AI</p>
                     </div>
                 """, unsafe_allow_html=True)
                 

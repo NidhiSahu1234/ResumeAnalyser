@@ -1,9 +1,8 @@
 ﻿"""
-Smart Resume AI - Main Application
+CareerFit AI - Main Application
 """
 import re
 import time
-from PIL import Image
 from jobs.job_search import render_job_search
 from matching.page import render_job_match
 from datetime import datetime
@@ -17,7 +16,6 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Inches, Pt
 from docx import Document
 import io
-import base64
 import plotly.graph_objects as go
 from streamlit_lottie import st_lottie
 import requests
@@ -32,7 +30,6 @@ from config.database import (
 from utils.ai_resume_analyzer import AIResumeAnalyzer
 from utils.resume_builder import ResumeBuilder
 from utils.resume_analyzer import ResumeAnalyzer
-import traceback
 import plotly.express as px
 import pandas as pd
 import json
@@ -41,7 +38,7 @@ import datetime
 
 # Set page config at the very beginning
 st.set_page_config(
-    page_title="Smart Resume AI",
+    page_title="CareerFit AI",
     page_icon="🚀",
     layout="wide"
 )
@@ -476,50 +473,15 @@ class ResumeApp:
         """, unsafe_allow_html=True)
         
     def add_footer(self):
-        """Add a footer to all pages"""
-        st.markdown("<hr style='margin-top: 50px; margin-bottom: 20px;'>", unsafe_allow_html=True)
-        
-        col1, col2, col3 = st.columns([1, 3, 1])
-        
-        with col2:
-            # GitHub star button with lottie animation
-            st.markdown("""
-            <div style='display: flex; justify-content: center; align-items: center; margin-bottom: 10px;'>
-                <a href='https://github.com/Hunterdii/Smart-AI-Resume-Analyzer' target='_blank' style='text-decoration: none;'>
-                    <div style='display: flex; align-items: center; background-color: #24292e; padding: 5px 10px; border-radius: 5px; transition: all 0.3s ease;'>
-                        <svg height="16" width="16" viewBox="0 0 16 16" version="1.1" style='margin-right: 5px;'>
-                            <path fill-rule="evenodd" d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z" fill="gold"></path>
-                        </svg>
-                        <span style='color: white; font-size: 14px;'>Star this repo</span>
-                    </div>
-                </a>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Footer text
-            st.markdown("""
-            <p style='text-align: center;'>
-                Powered by <b>Streamlit</b> and <b>Google Gemini AI</b> | Developed by 
-                <a href="https://www.linkedin.com/in/patel-hetkumar-sandipbhai-8b110525a/" target="_blank" style='text-decoration: none; color: #FFFFFF'>
-                    <b>Het Patel (Hunterdii)</b>
-                </a>
-            </p>
-            <p style='text-align: center; font-size: 12px; color: #888888;'>
-                "Every star counts! If you find this project helpful, please consider starring the repo to help it reach more people."
-            </p>
-            """, unsafe_allow_html=True)
-
-    def load_image(self, image_name):
-        """Load image from static directory"""
-        try:
-            image_path = f"c:/Users/shree/Downloads/smart-resume-ai/{image_name}"
-            with open(image_path, "rb") as f:
-                image_bytes = f.read()
-            encoded = base64.b64encode(image_bytes).decode()
-            return f"data:image/png;base64,{encoded}"
-        except Exception as e:
-            print(f"Error loading image {image_name}: {e}")
-            return None
+        """Render a small product footer with the destination repository."""
+        st.markdown("---")
+        st.markdown(
+            "<div style='text-align:center; color:#9aa4b2; font-size:0.9rem;'>"
+            "CareerFit AI · Resume feedback you can explain · "
+            "<a href='https://github.com/NidhiSahu1234/ResumeAnalyser' "
+            "target='_blank' rel='noopener noreferrer'>Source code</a></div>",
+            unsafe_allow_html=True,
+        )
 
     def export_to_excel(self):
         """Export resume data to Excel"""
@@ -557,8 +519,6 @@ class ResumeApp:
     def render_dashboard(self):
         """Render the dashboard page"""
         self.dashboard_manager.render_dashboard()
-
-        st.toast("Check out these repositories: [Awesome Hacking](https://github.com/Hunterdii/Awesome-Hacking)", icon="ℹ️")
 
 
     def render_empty_state(self, icon, message):
@@ -905,23 +865,19 @@ class ResumeApp:
             'summary': summary
         })
 
+        save_resume_to_dashboard = st.checkbox(
+            "Save my resume details to the dashboard database",
+            value=False,
+            help="This stores the resume information you entered in the app's local SQLite database. Leave unchecked to generate without saving.",
+            key="builder_save_to_dashboard",
+        )
+
         # Generate Resume button
         if st.button("Generate Resume 📄", type="primary"):
-            print("Validating form data...")
-            print(f"Session state form data: {st.session_state.form_data}")
-            print(
-    f"Email input value: {
-        st.session_state.get(
-            'email_input',
-             '')}")
-
             # Get the current values from form
             current_name = st.session_state.form_data['personal_info']['full_name'].strip(
             )
             current_email = st.session_state.email_input if 'email_input' in st.session_state else ''
-
-            print(f"Current name: {current_name}")
-            print(f"Current email: {current_email}")
 
             # Validate required fields
             if not current_name:
@@ -936,7 +892,6 @@ class ResumeApp:
             st.session_state.form_data['personal_info']['email'] = current_email
 
             try:
-                print("Preparing resume data...")
                 # Prepare resume data with current form values
                 resume_data = {
                     "personal_info": st.session_state.form_data['personal_info'],
@@ -953,18 +908,18 @@ class ResumeApp:
                     "template": selected_template
                 }
 
-                print(f"Resume data prepared: {resume_data}")
-
                 try:
                     # Generate resume
                     resume_buffer = self.builder.generate_resume(resume_data)
                     if resume_buffer:
                         try:
-                            # Save resume data to database
-                            save_resume_data(resume_data)
+                            if save_resume_to_dashboard:
+                                save_resume_data(resume_data)
 
                             # Offer the resume for download
                             st.success("✅ Resume generated successfully!")
+                            if not save_resume_to_dashboard:
+                                st.caption("Your resume details were not saved to the dashboard database.")
 
                             # Show snowflake effect
                             st.snow()
@@ -979,12 +934,8 @@ class ResumeApp:
                                 on_click=lambda: st.balloons()
                             )
                         except Exception as db_error:
-                            print(
-    f"Warning: Failed to save to database: {
-        str(db_error)}")
                             # Still allow download even if database save fails
-                            st.warning(
-                                "⚠️ Resume generated but couldn't be saved to database")
+                            st.warning("Resume generated, but the optional database save failed.")
                             
                             # Show balloons effect
                             st.balloons()
@@ -1003,254 +954,45 @@ class ResumeApp:
                             "❌ Failed to generate resume. Please try again.")
                         print("Resume buffer was None")
                 except Exception as gen_error:
-                    print(f"Error during resume generation: {str(gen_error)}")
-                    print(f"Full traceback: {traceback.format_exc()}")
-                    st.error(f"❌ Error generating resume: {str(gen_error)}")
+                                st.error("❌ Error generating the resume. Please try again.")
 
             except Exception as e:
-                print(f"Error preparing resume data: {str(e)}")
-                print(f"Full traceback: {traceback.format_exc()}")
-                st.error(f"❌ Error preparing resume data: {str(e)}")
-
-        st.toast("Check out these repositories: [30-Days-Of-Rust](https://github.com/Hunterdii/30-Days-Of-Rust)", icon="ℹ️")
+                        st.error("❌ The resume could not be prepared. Check the required fields and try again.")
 
     def render_about(self):
-        """Render the about page"""
-        # Apply modern styles
-        from ui_components import apply_modern_styles
-        import base64
-        import os
-
-        # Function to load image as base64
-        def get_image_as_base64(file_path):
-            try:
-                with open(file_path, "rb") as image_file:
-                    encoded = base64.b64encode(image_file.read()).decode()
-                    return f"data:image/jpeg;base64,{encoded}"
-            except:
-                return None
-
-        # Get image path and convert to base64
-        image_path = os.path.join(
-    os.path.dirname(__file__),
-    "assets",
-     "124852522.jpeg")
-        image_base64 = get_image_as_base64(image_path)
-
+        """Explain the product, its scoring, and its data boundaries."""
         apply_modern_styles()
-
-        # Add Font Awesome icons and custom CSS
-        st.markdown("""
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-            <style>
-                .profile-section, .vision-section, .feature-card {
-                    text-align: center;
-                    padding: 2rem;
-                    background: rgba(45, 45, 45, 0.9);
-                    border-radius: 20px;
-                    margin: 2rem auto;
-                    max-width: 800px;
-                }
-
-                .profile-image {
-                    width: 200px;
-                    height: 200px;
-                    border-radius: 50%;
-                    margin: 0 auto 1.5rem;
-                    display: block;
-                    object-fit: cover;
-                    border: 4px solid #4CAF50;
-                }
-
-                .profile-name {
-                    font-size: 2.5rem;
-                    color: white;
-                    margin-bottom: 0.5rem;
-                }
-
-                .profile-title {
-                    font-size: 1.2rem;
-                    color: #4CAF50;
-                    margin-bottom: 1.5rem;
-                }
-
-                .social-links {
-                    display: flex;
-                    justify-content: center;
-                    gap: 1.5rem;
-                    margin: 2rem 0;
-                }
-
-                .social-link {
-                    font-size: 2rem;
-                    color: #4CAF50;
-                    transition: all 0.3s ease;
-                    padding: 0.5rem;
-                    border-radius: 50%;
-                    background: rgba(76, 175, 80, 0.1);
-                    width: 60px;
-                    height: 60px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    text-decoration: none;
-                }
-
-                .social-link:hover {
-                    transform: translateY(-5px);
-                    background: #4CAF50;
-                    color: white;
-                    box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
-                }
-
-                .bio-text {
-                    color: #ddd;
-                    line-height: 1.8;
-                    font-size: 1.1rem;
-                    margin-top: 2rem;
-                    text-align: left;
-                }
-
-                .vision-text {
-                    color: #ddd;
-                    line-height: 1.8;
-                    font-size: 1.1rem;
-                    font-style: italic;
-                    margin: 1.5rem 0;
-                    text-align: left;
-                }
-
-                .vision-icon {
-                    font-size: 2.5rem;
-                    color: #4CAF50;
-                    margin-bottom: 1rem;
-                }
-
-                .vision-title {
-                    font-size: 2rem;
-                    color: white;
-                    margin-bottom: 1rem;
-                }
-
-                .features-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                    gap: 2rem;
-                    margin: 2rem auto;
-                    max-width: 1200px;
-                }
-
-                .feature-card {
-                    padding: 2rem;
-                    margin: 0;
-                }
-
-                .feature-icon {
-                    font-size: 2.5rem;
-                    color: #4CAF50;
-                    margin-bottom: 1rem;
-                }
-
-                .feature-title {
-                    font-size: 1.5rem;
-                    color: white;
-                    margin: 1rem 0;
-                }
-
-                .feature-description {
-                    color: #ddd;
-                    line-height: 1.6;
-                }
-            </style>
-        """, unsafe_allow_html=True)
-
-        # Hero Section
-        st.markdown("""
-            <div class="hero-section">
-                <h1 class="hero-title">About Smart Resume AI</h1>
-                <p class="hero-subtitle">A powerful AI-driven platform for optimizing your resume</p>
-            </div>
-        """, unsafe_allow_html=True)
-
-        # Profile Section
-        st.markdown(f"""
-            <div class="profile-section">
-                <img src="{image_base64 if image_base64 else 'https://avatars.githubusercontent.com/Hunterdii'}"
-                     alt="Het Patel"
-                     class="profile-image"
-                     onerror="this.onerror=null; this.src='https://avatars.githubusercontent.com/Hunterdii';">
-                <h2 class="profile-name">Het Patel (Hunterdii)</h2>
-                <p class="profile-title">Full Stack Developer & AI/ML Enthusiast</p>
-                <div class="social-links">
-                    <a href="https://github.com/Hunterdii" class="social-link" target="_blank">
-                        <i class="fab fa-github"></i>
-                    </a>
-                    <a href="https://www.linkedin.com/in/patel-hetkumar-sandipbhai-8b110525a/" class="social-link" target="_blank">
-                        <i class="fab fa-linkedin"></i>
-                    </a>
-                    <a href="mailto:hunterdii9879@gmail.com" class="social-link" target="_blank">
-                        <i class="fas fa-envelope"></i>
-                    </a>
-                </div>
-                <p class="bio-text">
-                    Hello! I'm a passionate Full Stack Developer with expertise in AI and Machine Learning.
-                    I created Smart Resume AI to revolutionize how job seekers approach their career journey.
-                    With my background in both software development and AI, I've designed this platform to
-                    provide intelligent, data-driven insights for resume optimization.
-                </p>
-            </div>
-        """, unsafe_allow_html=True)
-
-
-
-
-        # Vision Section
-        st.markdown("""
-            <div class="vision-section">
-                <i class="fas fa-lightbulb vision-icon"></i>
-                <h2 class="vision-title">Our Vision</h2>
-                <p class="vision-text">
-                    "Smart Resume AI represents my vision of democratizing career advancement through technology.
-                    By combining cutting-edge AI with intuitive design, this platform empowers job seekers at
-                    every career stage to showcase their true potential and stand out in today's competitive job market."
-                </p>
-            </div>
-        """, unsafe_allow_html=True)
-
-        # Features Section
-        st.markdown("""
-            <div class="features-grid">
-                <div class="feature-card">
-                    <i class="fas fa-robot feature-icon"></i>
-                    <h3 class="feature-title">AI-Powered Analysis</h3>
-                    <p class="feature-description">
-                        Advanced AI algorithms provide detailed insights and suggestions to optimize your resume for maximum impact.
-                    </p>
-                </div>
-                <div class="feature-card">
-                    <i class="fas fa-chart-line feature-icon"></i>
-                    <h3 class="feature-title">Data-Driven Insights</h3>
-                    <p class="feature-description">
-                        Make informed decisions with our analytics-based recommendations and industry insights.
-                    </p>
-                </div>
-                <div class="feature-card">
-                    <i class="fas fa-shield-alt feature-icon"></i>
-                    <h3 class="feature-title">Privacy First</h3>
-                    <p class="feature-description">
-                        Your data security is our priority. We ensure your information is always protected and private.
-                    </p>
-                </div>
-            </div>
-            <div style="text-align: center; margin: 3rem 0;">
-                <a href="?page=analyzer" class="cta-button">
-                    Start Your Journey
-                    <i class="fas fa-arrow-right" style="margin-left: 10px;"></i>
-                </a>
-            </div>
-        """, unsafe_allow_html=True)
-
-        st.toast("Check out these repositories: [Iriswise](https://github.com/Hunterdii/Iriswise)", icon="ℹ️")
+        page_header(
+            "About CareerFit AI",
+            "Practical resume tools with clear explanations and honest limits",
+        )
+        first, second = st.columns(2, gap="large")
+        with first:
+            st.subheader("Understand the match")
+            st.write(
+                "Compare a resume with a specific job posting. CareerFit AI shows the "
+                "skills it found, the gaps it could not find, and the resume evidence "
+                "behind each match."
+            )
+            st.info(
+                "The job-match estimate is a transparent heuristic. It is not an ATS "
+                "score and does not predict an employer's hiring decision."
+            )
+        with second:
+            st.subheader("Improve with evidence")
+            st.write(
+                "Use resume analysis, bullet feedback, and the resume builder to make "
+                "your experience easier to read. Suggestions do not add achievements "
+                "or qualifications for you."
+            )
+            st.warning(
+                "The job-match tool runs locally in the app process. Other analyzer "
+                "features can store resume-builder submissions in the app's SQLite "
+                "database. AI analysis sends resume text to the provider you configure. "
+                "This app does not provide separate user accounts."
+            )
+        st.markdown("Built on the open-source project credited in the [LICENSE](https://github.com/NidhiSahu1234/ResumeAnalyser/blob/main/LICENSE).")
+        st.markdown("[View CareerFit AI source code](https://github.com/NidhiSahu1234/ResumeAnalyser)")
 
     def render_analyzer(self):
         """Render the resume analyzer page"""
@@ -1259,7 +1001,7 @@ class ResumeApp:
         # Page Header
         page_header(
             "Resume Analyzer",
-            "Get instant AI-powered feedback to optimize your resume"
+            "Review structure, strengthen your writing, and compare your resume with a real job posting"
         )
 
         # Create tabs for Normal Analyzer and AI Analyzer
@@ -1291,6 +1033,13 @@ class ResumeApp:
             uploaded_file = st.file_uploader(
     "Upload your resume", type=[
         'pdf', 'docx'], key="standard_file")
+
+            save_standard_analysis = st.checkbox(
+                "Save this resume and analysis to the dashboard database",
+                value=False,
+                help="Stores extracted resume details and analysis scores in the app's local SQLite database.",
+                key="standard_save_to_dashboard",
+            )
 
             if not uploaded_file:
                 # Display empty state with a prominent upload button
@@ -1404,25 +1153,24 @@ class ResumeApp:
                             'template': ''
                         }
 
-                        # Save to database
-                        try:
-                            resume_id = save_resume_data(resume_data)
-
-                            # Save analysis data
-                            analysis_data = {
-                                'resume_id': resume_id,
-                                'ats_score': analysis['ats_score'],
-                                'keyword_match_score': analysis['keyword_match']['score'],
-                                'format_score': analysis['format_score'],
-                                'section_score': analysis['section_score'],
-                                'missing_skills': ','.join(analysis['keyword_match']['missing_skills']),
-                                'recommendations': ','.join(analysis['suggestions'])
-                            }
-                            save_analysis_data(resume_id, analysis_data)
-                            st.success("Resume data saved successfully!")
-                        except Exception as e:
-                            st.error(f"Error saving to database: {str(e)}")
-                            print(f"Database error: {e}")
+                        if save_standard_analysis:
+                            try:
+                                resume_id = save_resume_data(resume_data)
+                                analysis_data = {
+                                    'resume_id': resume_id,
+                                    'ats_score': analysis['ats_score'],
+                                    'keyword_match_score': analysis['keyword_match']['score'],
+                                    'format_score': analysis['format_score'],
+                                    'section_score': analysis['section_score'],
+                                    'missing_skills': ','.join(analysis['keyword_match']['missing_skills']),
+                                    'recommendations': ','.join(analysis['suggestions'])
+                                }
+                                save_analysis_data(resume_id, analysis_data)
+                                st.success("Resume and analysis saved to the dashboard database.")
+                            except Exception:
+                                st.warning("Analysis finished, but the optional database save failed.")
+                        else:
+                            st.caption("This analysis was not saved to the dashboard database.")
 
                         # Show results based on document type
                         if analysis.get('document_type') != 'resume':
@@ -1687,10 +1435,15 @@ class ResumeApp:
             st.markdown("""
             <div style='background-color: #1e1e1e; padding: 20px; border-radius: 10px; margin: 10px 0;'>
                 <h3>AI-Powered Resume Analysis</h3>
-                <p>Get detailed insights from advanced AI models that analyze your resume and provide personalized recommendations.</p>
+                <p>Get resume feedback from Google Gemini, with suggestions tailored to a role you choose.</p>
                 <p><strong>Upload your resume to get AI-powered analysis and recommendations.</strong></p>
             </div>
             """, unsafe_allow_html=True)
+
+            st.warning(
+                "AI analysis sends extracted resume text and, if entered, the job description to Google Gemini. "
+                "The job-match page does not use an external AI provider."
+            )
 
             # AI Model Selection
             ai_model = st.selectbox(
@@ -1734,7 +1487,7 @@ class ResumeApp:
                             else:
                                 st.error(result["message"])
                             # Refresh the page to show updated stats
-                            st.experimental_rerun()
+                            st.rerun()
 
                     # Get detailed AI analysis statistics
                     from config.database import get_detailed_ai_analysis_stats
@@ -2340,11 +2093,17 @@ class ResumeApp:
         unsafe_allow_html=True
     )
             else:
+                ai_data_consent = st.checkbox(
+                    "I understand and agree to send this resume to Google Gemini for analysis.",
+                    value=False,
+                    key="ai_data_consent",
+                )
                 # Add a prominent analyze button
                 analyze_ai = st.button("🤖 Analyze with AI",
                                 type="primary",
                                 width='stretch',
-                                key="analyze_ai_button")
+                                key="analyze_ai_button",
+                                disabled=not ai_data_consent)
 
                 if analyze_ai:
                     with st.spinner(f"Analyzing your resume with {ai_model}..."):
@@ -2805,11 +2564,7 @@ class ResumeApp:
                                 else:
                                     st.error(f"Analysis failed: {analysis_result.get('error', 'Unknown error')}")
                         except Exception as ai_error:
-                            st.error(f"Error during AI analysis: {str(ai_error)}")
-                            import traceback as tb
-                            st.code(tb.format_exc())
-
-        st.toast("Check out these repositories: [Awesome Java](https://github.com/Hunterdii/Awesome-Java)", icon="ℹ️")
+                            st.error("AI analysis could not be completed. Check the Gemini key and try again.")
 
 
     def render_home(self):
@@ -2817,8 +2572,8 @@ class ResumeApp:
         
         # Hero Section
         hero_section(
-            "Smart Resume AI",
-            "Transform your career with AI-powered resume analysis and building. Get personalized insights and create professional resumes that stand out."
+            "CareerFit AI",
+            "Make your experience easier to read, compare your resume with real job requirements, and build a focused application."
         )
         
         # Features Section
@@ -2826,8 +2581,8 @@ class ResumeApp:
         
         feature_card(
             "fas fa-robot",
-            "AI-Powered Analysis",
-            "Get instant feedback on your resume with advanced AI analysis that identifies strengths and areas for improvement."
+            "Explainable Job Match",
+            "See the skills found, the gaps, and the resume evidence behind each comparison."
         )
         
         feature_card(
@@ -2838,13 +2593,11 @@ class ResumeApp:
         
         feature_card(
             "fas fa-chart-line",
-            "Career Insights",
-            "Access detailed analytics and personalized recommendations to enhance your career prospects."
+            "Actionable Feedback",
+            "Review structure, improve bullet clarity, and explore role-based learning resources."
         )
         
         st.markdown('</div>', unsafe_allow_html=True)
-        
-        st.toast("Check out these repositories: [AI-Nexus(AI/ML)](https://github.com/Hunterdii/AI-Nexus)", icon="ℹ️")
 
         # Call-to-Action with Streamlit navigation
         col1, col2, col3 = st.columns([1, 1, 1])
@@ -2864,8 +2617,6 @@ class ResumeApp:
     def render_job_search(self):
         """Render the job search page"""
         render_job_search()
-
-        st.toast("Check out these repositories: [GeeksforGeeks-POTD](https://github.com/Hunterdii/GeeksforGeeks-POTD)", icon="ℹ️")
 
 
     def render_feedback_page(self):
@@ -2890,37 +2641,10 @@ class ResumeApp:
         with stats_tab:
             feedback_manager.render_feedback_stats()
 
-        st.toast("Check out these repositories: [TryHackMe Free Rooms](https://github.com/Hunterdii/tryhackme-free-rooms)", icon="ℹ️")
-
 
     def show_repo_notification(self):
-        message = """
-<div style="background-color: #1e1e1e; border-radius: 10px; border: 1px solid #4b6cb7; padding: 10px; margin: 10px 0; color: white;">
-    <div style="margin-bottom: 10px;">Check out these other repositories:</div>
-    <div style="margin-bottom: 5px;"><b>Hacking Resources:</b></div>
-    <ul style="margin-top: 0; padding-left: 20px;">
-        <li><a href="https://github.com/Hunterdii/tryhackme-free-rooms" target="_blank" style="color: #4CAF50;">TryHackMe Free Rooms</a></li>
-        <li><a href="https://github.com/Hunterdii/Awesome-Hacking" target="_blank" style="color: #4CAF50;">Awesome Hacking</a></li>
-    </ul>
-    <div style="margin-bottom: 5px;"><b>Programming Languages:</b></div>
-    <ul style="margin-top: 0; padding-left: 20px;">
-        <li><a href="https://github.com/Hunterdii/Awesome-Java" target="_blank" style="color: #4CAF50;">Awesome Java</a></li>
-        <li><a href="https://github.com/Hunterdii/30-Days-Of-Rust" target="_blank" style="color: #4CAF50;">30 Days Of Rust</a></li>
-    </ul>
-    <div style="margin-bottom: 5px;"><b>Data Structures & Algorithms:</b></div>
-    <ul style="margin-top: 0; padding-left: 20px;">
-        <li><a href="https://github.com/Hunterdii/GeeksforGeeks-POTD" target="_blank" style="color: #4CAF50;">GeeksforGeeks POTD</a></li>
-        <li><a href="https://github.com/Hunterdii/Leetcode-POTD" target="_blank" style="color: #4CAF50;">Leetcode POTD</a></li>
-    </ul>
-    <div style="margin-bottom: 5px;"><b>AI/ML Projects:</b></div>
-    <ul style="margin-top: 0; padding-left: 20px;">
-        <li><a href="https://github.com/Hunterdii/AI-Nexus" target="_blank" style="color: #4CAF50;">AI Nexus</a></li>
-    </ul>
-    <div style="margin-top: 10px;">If you find this project helpful, please consider ⭐ starring the repo!</div>
-</div>
-"""
-        st.sidebar.markdown(message, unsafe_allow_html=True)
-
+        """Link to this project's source instead of unrelated promotional repos."""
+        st.sidebar.markdown("[CareerFit AI source code](https://github.com/NidhiSahu1234/ResumeAnalyser)")
 
     def main(self):
         """Main application entry point"""
@@ -2931,7 +2655,7 @@ class ResumeApp:
             animation = self.load_lottie_url("https://assets5.lottiefiles.com/packages/lf20_xyadoh9h.json")
             if animation:
                 st_lottie(animation, height=200, key="sidebar_animation")
-            st.title("Smart Resume AI")
+            st.title("CareerFit AI")
             st.markdown("---")
             
             # Navigation buttons
